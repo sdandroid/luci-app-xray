@@ -2,19 +2,9 @@
     "luci-app-xray": {
         "description": "Grant access to xray configurations",
         "read": {
-            "ubus": {
-                "luci": [
-                    "getInitList",
-                    "setInitAction"
-                ]
-            },
             "uci": [
                 "xapp"
-            ],
-            "file": {
-                "/etc/init.d/xapp": [ "exec" ],
-                "/var/run/xray.pid": [ "read" ]
-            }
+            ]
         },
         "write": {
             "uci": [
@@ -23,3 +13,4 @@
         }
     }
 }
+

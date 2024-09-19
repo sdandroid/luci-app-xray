@@ -8,28 +8,12 @@
 'require network';
 'require tools.widgets as widgets';
 
-var callInitList, callInitAction, ServiceController;
-
 const FEATURE_FLAGS = {
     have_fw3: false,  // %FLAG_NO_FW3% managed by build system
     have_fw4: false,  // %FLAG_NO_FW4% managed by build system
     // %FLAG_FW3% have_fw3: true,  // uncomment by build system on fw3
     // %FLAG_FW4% have_fw4: true,  // uncomment by build system on fw4
 };
-
-callInitList = rpc.declare({
-    object: 'luci',
-    method: 'getInitList',
-    params: [ 'name' ],
-    expect: { '': {} }
-}),
-
-callInitAction = rpc.declare({
-    object: 'luci',
-    method: 'setInitAction',
-    params: [ 'name', 'action' ],
-    expect: { result: false }
-});
 
 
 function add_flow_and_stream_security_conf(s, tab_name, depends_field_name, protocol_name, have_xtls, have_tls_flow, is_outbound_protocol) {
@@ -233,45 +217,9 @@ function check_dns_format(_, dns) {
     return "Invalid DNS address";
 }
 
-ServiceController = form.DummyValue.extend({
-    handleAction: function(name, action, ev) {
-        return callInitAction(name, action).then(function(success) {
-            ui.addNotification(null, E('p', _('Service %s success.').format(action)), 'info');
-        }).catch(function (e) {
-            ui.addNotification(null, E("p", _('Unable to perform service %s: %s').format(action, e.message)), "error");
-        });
-    },
 
-    renderWidget: function(section_id, option_id, cfgvalue) {
-        return E([], [
-            E('span', { 'class': 'control-group' }, [
-                E('button', {
-                    class: 'btn cbi-button-%s'.format(this.service_enabled ? 'positive' : 'negative'),
-                    click: ui.createHandlerFn(this, function() {
-                        return callInitAction(this.service_name, this.service_enabled ? "disable": "enable").then(rc => ui.addNotification(null, E('p', _('Toggle startup success.')), 'info'));
-                    }),
-                    disabled: this.control_disabled
-                }, this.service_enabled ? _('Enabled') : _('Disabled')),
-                E('button', { 'class': 'btn cbi-button-action', 'click': ui.createHandlerFn(this, 'handleAction', this.service_name, 'start'), 'disabled': this.control_disabled }, _('Start')),
-                E('button', { 'class': 'btn cbi-button-action', 'click': ui.createHandlerFn(this, 'handleAction', this.service_name, 'restart'), 'disabled': this.control_disabled }, _('Restart')),
-                E('button', { 'class': 'btn cbi-button-action', 'click': ui.createHandlerFn(this, 'handleAction', this.service_name, 'stop'), 'disabled': this.control_disabled }, _('Stop'))
-            ])
-        ]);
-    },
-});
 
 return view.extend({
-    handleServiceReload: function (ev) {
-        return callInitAction("xapp", "restart").then(function(rc) {
-            ui.addNotification(null, E('p', _('Reload service success.')), 'info');
-        }).catch(function (e) {
-            ui.addNotification(null, E("p", _('Unable to reload service: %s').format(e.message)), "error");
-        });
-    },
-
-    handleSaveApply: function (ev, mode) {
-        return this.__base__.handleSaveApply(ev, mode).then(this.handleServiceReload);
-    },
 
     load: function () {
         return Promise.all([
@@ -279,7 +227,6 @@ return view.extend({
             fs.list("/usr/share/xray"),
             network.getHostHints(),
             L.resolveDefault(fs.read("/var/run/xray.pid"), null),
-            callInitList("xapp"),
         ])
     },
 
@@ -288,7 +235,6 @@ return view.extend({
         const xray_dir = load_result[1];
         const network_hosts = load_result[2];
         const xray_pid = load_result[3];
-        const xray_service_status = load_result[4]["xapp"];
         const geoip_direct_code = uci.get_first(config_data, "general", "geoip_direct_code");
         const { geoip_existence, geoip_size, geosite_existence, geosite_size, optional_features, firewall4, xray_bin_default } = check_resource_files(xray_dir);
         const status_text = xray_pid ? (_("[Xray is running]") + `[PID:${xray_pid.trim()}]`) : _("[Xray is stopped]");
@@ -316,10 +262,6 @@ return view.extend({
             o.value("/usr/bin/xray", _("/usr/bin/xray (default, exist)"))
         }
 
-        o = s.taboption('general', ServiceController, "_service", _("Service Control"), _("Refresh the page manually for actions to take effect"));
-        o.service_name = "xapp"
-        o.service_enabled = xray_service_status.enabled;
-        o.service_index = xray_service_status.index;
 
         o = s.taboption('general', form.ListValue, 'main_server', _('TCP Server'))
         o.datatype = "uciname"
