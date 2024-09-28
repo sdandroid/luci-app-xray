@@ -947,6 +947,13 @@ function bridge_rules() {
 
 function rules() {
     let result = [
+       {
+                "type": "field",
+                "protocol": [
+                  "bittorrent"
+                ],
+                "outboundTag": "direct"
+        },
         {
             type: "field",
             inboundTag: ["tproxy_tcp_inbound", "dns_conf_inbound", "socks_inbound", "https_inbound", "http_inbound"],
