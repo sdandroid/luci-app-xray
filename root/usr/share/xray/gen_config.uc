@@ -722,7 +722,7 @@ function dns_conf() {
 
     if (secure_domain_rules() != null) {
         const secure_dns_object = parse_dns_server_string(proxy["secure_dns"], true);
-        splice(servers, 1, 0, ...map(
+        splice(servers, 2, 0, ...map(
             secure_dns_object["urls"],
             url => ({
                 address: url,
