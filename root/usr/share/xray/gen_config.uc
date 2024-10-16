@@ -947,13 +947,7 @@ function bridge_rules() {
 
 function rules() {
     let result = [
-       {
-                "type": "field",
-                "protocol": [
-                  "bittorrent"
-                ],
-                "outboundTag": "direct"
-        },
+
         {
             type: "field",
             inboundTag: ["tproxy_tcp_inbound", "dns_conf_inbound", "socks_inbound", "https_inbound", "http_inbound"],
@@ -982,39 +976,9 @@ function rules() {
             outboundTag: "metrics"
         });
     }
-    if (geoip_existence) {
-        if (proxy["geoip_direct_code"] == null || proxy["geoip_direct_code"] == "upgrade") {
-            if (proxy["geoip_direct_code_list"] != null) {
-                const geoip_direct_code_list = map(proxy["geoip_direct_code_list"], v => "geoip:" + v);
-                splice(result, 0, 0, {
-                    type: "field",
-                    inboundTag: ["tproxy_tcp_inbound", "tproxy_udp_inbound", "dns_conf_inbound"],
-                    outboundTag: "direct",
-                    ip: geoip_direct_code_list
-                });
-            }
-        } else {
-            splice(result, 0, 0, {
-                type: "field",
-                inboundTag: ["tproxy_tcp_inbound", "tproxy_udp_inbound", "dns_conf_inbound"],
-                outboundTag: "direct",
-                ip: ["geoip:" + proxy["geoip_direct_code"]]
-            });
-        }
-        splice(result, 0, 0, {
-            type: "field",
-            inboundTag: ["tproxy_tcp_inbound", "tproxy_udp_inbound", "dns_conf_inbound", "socks_inbound", "https_inbound", "http_inbound"],
-            outboundTag: "direct",
-            ip: ["geoip:private"]
-        });
-    }
+
     if (proxy["tproxy_sniffing"] == "1") {
-        splice(result, 0, 0, {
-            type: "field",
-            inboundTag: ["tproxy_tcp_inbound", "tproxy_udp_inbound", "dns_conf_inbound", "https_inbound", "http_inbound"],
-            outboundTag: "direct",
-            domain: fast_domain_rules()
-        });
+
         if (secure_domain_rules() != null) {
             splice(result, 0, 0, {
                 type: "field",
@@ -1037,7 +1001,48 @@ function rules() {
                 domain: blocked_domain_rules(),
             });
         }
+          splice(result, 0, 0, {
+                    type: "field",
+                    inboundTag: ["tproxy_tcp_inbound", "tproxy_udp_inbound", "dns_conf_inbound", "https_inbound", "http_inbound"],
+                    outboundTag: "direct",
+                    domain: fast_domain_rules()
+                });
     }
+
+        if (geoip_existence) {
+            if (proxy["geoip_direct_code"] == null || proxy["geoip_direct_code"] == "upgrade") {
+                if (proxy["geoip_direct_code_list"] != null) {
+                    const geoip_direct_code_list = map(proxy["geoip_direct_code_list"], v => "geoip:" + v);
+                    splice(result, 0, 0, {
+                        type: "field",
+                        inboundTag: ["tproxy_tcp_inbound", "tproxy_udp_inbound", "dns_conf_inbound"],
+                        outboundTag: "direct",
+                        ip: geoip_direct_code_list
+                    });
+                }
+            } else {
+                splice(result, 0, 0, {
+                    type: "field",
+                    inboundTag: ["tproxy_tcp_inbound", "tproxy_udp_inbound", "dns_conf_inbound"],
+                    outboundTag: "direct",
+                    ip: ["geoip:" + proxy["geoip_direct_code"]]
+                });
+            }
+            splice(result, 0, 0, {
+                type: "field",
+                inboundTag: ["tproxy_tcp_inbound", "tproxy_udp_inbound", "dns_conf_inbound", "socks_inbound", "https_inbound", "http_inbound"],
+                outboundTag: "direct",
+                ip: ["geoip:private"]
+            });
+        }
+        splice(result, 0, 0, {
+                        "type": "field",
+                        "protocol": [
+                          "bittorrent"
+                        ],
+                        "outboundTag": "direct"
+        });
+
     splice(result, 0, 0, ...manual_tproxy_rules());
     splice(result, 0, 0, ...bridge_rules());
     return result
