@@ -26,21 +26,7 @@ start_xray() {
     procd_append_param command run
     procd_append_param command -confdir
     procd_append_param command /var/etc/xray
-
-    local rlimit_nofile
-    local rlimit_data
-    rlimit_nofile="$(uci_get_by_type general rlimit_nofile)"
-    rlimit_data="$(uci_get_by_type general rlimit_data)"
-
-    if [ ! -z "${rlimit_nofile}" ] ; then
-        log "set limit nofile=${rlimit_nofile}"
-        procd_set_param limits "nofile=${rlimit_nofile}"
-    fi
-    if [ ! -z "${rlimit_data}" ] ; then
-        log "set limit data=${rlimit_data}"
-        procd_set_param limits "data=${rlimit_data}"
-    fi
-
+    procd_set_param limits core="unlimited" nofile="1000000 1000000" data="419430400 419430400"
     procd_set_param env XRAY_LOCATION_ASSET=/usr/share/xray
     procd_set_param stdout 1
     procd_set_param stderr 1
