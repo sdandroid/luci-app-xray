@@ -115,12 +115,6 @@ function rules(proxy, bridge, manual_tproxy, extra_inbound, fakedns) {
     const built_in_tcp_inbounds = [...tproxy_tcp_inbound_v4_tags, ...extra_inbound_global_tcp_tags, ...extra_inbound_global_http_tags, ...extra_inbound_global_socks5_tags, "socks_inbound", "https_inbound", "http_inbound"];
     const built_in_udp_inbounds = [...tproxy_udp_inbound_v4_tags, ...extra_inbound_global_udp_tags, "dns_conf_inbound"];
     let result = [
-        ...fake_dns_rules(fakedns),
-        ...manual_tproxy_rules(manual_tproxy),
-        ...extra_inbound_rules(extra_inbound),
-        ...system_route_rules(proxy),
-        ...bridge_rules(bridge),
-        ...dns_rules(proxy, [...tproxy_tcp_inbound_v6_tags, ...tproxy_tcp_inbound_v4_tags, ...extra_inbound_global_tcp_tags], [...tproxy_udp_inbound_v6_tags, ...tproxy_udp_inbound_v4_tags, ...extra_inbound_global_udp_tags]),
         ...function () {
             let direct_rules = [];
             if (geoip_existence) {
@@ -153,6 +147,12 @@ function rules(proxy, bridge, manual_tproxy, extra_inbound, fakedns) {
             }
             return direct_rules;
         }(),
+        ...fake_dns_rules(fakedns),
+        ...manual_tproxy_rules(manual_tproxy),
+        ...extra_inbound_rules(extra_inbound),
+        ...system_route_rules(proxy),
+        ...bridge_rules(bridge),
+        ...dns_rules(proxy, [...tproxy_tcp_inbound_v6_tags, ...tproxy_tcp_inbound_v4_tags, ...extra_inbound_global_tcp_tags], [...tproxy_udp_inbound_v6_tags, ...tproxy_udp_inbound_v4_tags, ...extra_inbound_global_udp_tags]),
         {
             type: "field",
             inboundTag: tproxy_tcp_inbound_v6_tags,

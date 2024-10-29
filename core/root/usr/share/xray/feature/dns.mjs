@@ -177,6 +177,12 @@ export function dns_conf(proxy, config, manual_tproxy, fakedns) {
     }
 
     let servers = [
+        {
+            address: fast_dns_object["address"],
+            port: fast_dns_object["port"],
+            domains: [...keys(domain_names_set), ...fast_domain_rules(proxy)],
+            skipFallback: true,
+        },
         ...fake_dns_domains(fakedns),
         ...map(keys(resolve_merged), function (k) {
             const dns_split = split(k, ";");
@@ -201,12 +207,7 @@ export function dns_conf(proxy, config, manual_tproxy, fakedns) {
             return result;
         }),
         default_dns_object,
-        {
-            address: fast_dns_object["address"],
-            port: fast_dns_object["port"],
-            domains: [...keys(domain_names_set), ...fast_domain_rules(proxy)],
-            skipFallback: true,
-        },
+
     ];
 
     if (length(secure_domain_rules(proxy)) > 0) {
