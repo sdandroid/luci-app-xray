@@ -48,21 +48,28 @@ gen_config_file() {
 setup_dnsmasq() {
     local dns_port=$(uci_get_by_type general dns_port)
     local dns_count=$(uci_get_by_type general dns_count 0)
+    
+    dnsId=$(uci -q show "dhcp.@dnsmasq[0]" | awk 'NR==1 {split($0, conf, /[.=]/); print conf[2]}')
 
-    echo "# Generated dnsmasq configurations by luci-app-xray" > /tmp/dnsmasq.d/xray.conf
-    echo "strict-order" >> /tmp/dnsmasq.d/xray.conf
-    echo "server=/#/127.0.0.1#${dns_port}" >> /tmp/dnsmasq.d/xray.conf
+    dnsfile=/tmp/dnsmasq.$dnsId.d/xray.conf
+
+    echo "# Generated dnsmasq configurations by luci-app-xray" > $dnsfile
+    echo "strict-order" >> $dnsfile
+    echo "server=/#/127.0.0.1#${dns_port}" >> $dnsfile
     local cur_port
     for cur_port in $(seq ${dns_port} $(expr ${dns_port} + ${dns_count})); do
-        echo "server=127.0.0.1#${cur_port}" >> /tmp/dnsmasq.d/xray.conf
+        echo "server=127.0.0.1#${cur_port}" >> $dnsfile
     done
 
-    log $(cat /tmp/dnsmasq.d/xray.conf)
+    log $(cat $dnsfile )
+
     /etc/init.d/dnsmasq restart > /dev/null 2>&1
 }
 
 flush_dnsmasq() {
-    [ -f "/tmp/dnsmasq.d/xray.conf" ] && rm /tmp/dnsmasq.d/xray.conf
+    dnsId=$(uci -q show "dhcp.@dnsmasq[0]" | awk 'NR==1 {split($0, conf, /[.=]/); print conf[2]}')
+    dnsfile=/tmp/dnsmasq.$dnsId.d/xray.conf
+    [ -f "$dnsfile" ] && rm $dnsfile
     /etc/init.d/dnsmasq restart > /dev/null 2>&1
 }
 
