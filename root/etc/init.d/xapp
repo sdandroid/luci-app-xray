@@ -82,7 +82,7 @@ create_when_enable() {
 
 flush_when_disable() {
     log "Resetting dnsmasq and firewall configurations..."
-    [ "$(uci_get_by_type general dnsmasq_takeover_enable)" == "1" ] && flush_dnsmasq
+    flush_dnsmasq
     flush_firewall
 }
 
